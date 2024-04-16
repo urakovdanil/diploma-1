@@ -4,6 +4,7 @@ import (
 	"context"
 	"diploma-1/internal/config"
 	"diploma-1/internal/logger"
+	"diploma-1/internal/storage"
 	"fmt"
 )
 
@@ -17,5 +18,7 @@ func main() {
 	}
 	fmt.Printf("applied args: %s\n", conf)
 	logger.New(conf)
-	logger.Errorf(ctx, "hello %s", "hi")
+	if err := storage.New(ctx); err != nil {
+		logger.Fatalf(ctx, "unable to init storage: %v", err)
+	}
 }

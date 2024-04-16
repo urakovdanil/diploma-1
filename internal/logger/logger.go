@@ -57,6 +57,14 @@ func Errorf(ctx context.Context, format string, args ...interface{}) {
 	log(ctx, fmt.Sprintf(format, args...), slog.LevelError)
 }
 
+func Fatal(ctx context.Context, message string) {
+	log(ctx, "FATAL: "+message, slog.LevelError+1)
+}
+
+func Fatalf(ctx context.Context, format string, args ...interface{}) {
+	log(ctx, fmt.Sprintf("FATAL: "+format, args...), slog.LevelError+1)
+}
+
 func log(ctx context.Context, message string, level slog.Level) {
 	if !l.Enabled(context.Background(), level) {
 		return
@@ -65,6 +73,9 @@ func log(ctx context.Context, message string, level slog.Level) {
 	runtime.Callers(3, pcs[:])
 	r := slog.NewRecord(time.Now(), slog.LevelError, message, pcs[0])
 	_ = l.Handler().Handle(ctx, r)
+	if level == slog.LevelError+1 {
+		os.Exit(1)
+	}
 }
 
 func replaceAttr(_ []string, a slog.Attr) slog.Attr {
