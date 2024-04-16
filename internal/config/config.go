@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/caarlos0/env/v6"
+	"log/slog"
 )
 
 const (
@@ -14,10 +15,15 @@ const (
 	defaultAccrualSystemAddress = "localhost:8081"
 )
 
+var (
+	defaultLogLevel = slog.LevelInfo.String()
+)
+
 type StartUp struct {
 	RunAddress           string `env:"RUN_ADDRESS" json:"run_address"`
 	DatabaseURI          string `env:"DATABASE_URI" json:"database_uri"`
 	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS" json:"accrual_system_address"`
+	LogLevel             string `env:"LOG_LEVEL" json:"log_level"`
 }
 
 func (c *StartUp) String() string {
@@ -43,6 +49,7 @@ func New(_ context.Context) (*StartUp, error) {
 	ra := flag.String("a", res.RunAddress, fmt.Sprintf("address to run server on, defaults to %s", defaultRunAddress))
 	du := flag.String("d", res.DatabaseURI, fmt.Sprintf("address to connect to PostgreSQL, defaults to %s", defaultDatabaseURI))
 	asa := flag.String("r", res.AccrualSystemAddress, fmt.Sprintf("address to connect to accrual system, defaults to %s", defaultAccrualSystemAddress))
+	ll := flag.String("l", defaultLogLevel, fmt.Sprintf("application log level, defaults to %s", defaultLogLevel))
 
 	if res.RunAddress == "" {
 		res.RunAddress = *ra
@@ -52,6 +59,9 @@ func New(_ context.Context) (*StartUp, error) {
 	}
 	if res.AccrualSystemAddress == "" {
 		res.AccrualSystemAddress = *asa
+	}
+	if res.LogLevel == "" {
+		res.LogLevel = *ll
 	}
 
 	return res, nil
