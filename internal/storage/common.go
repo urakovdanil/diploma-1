@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"diploma-1/internal/config"
 	"diploma-1/internal/storage/db/postgres"
 	"diploma-1/internal/types"
 )
@@ -12,8 +13,8 @@ type Storage interface {
 
 var UsedStorage Storage
 
-func New(ctx context.Context) error {
+func New(ctx context.Context, su *config.StartUp) error {
 	var err error
-	UsedStorage, err = postgres.New(ctx)
+	UsedStorage, err = postgres.New(ctx, su)
 	return err
 }

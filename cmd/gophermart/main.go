@@ -18,7 +18,7 @@ func main() {
 	}
 	fmt.Printf("applied args: %s\n", conf)
 	logger.New(conf)
-	if err := storage.New(ctx); err != nil {
+	if err := storage.New(ctx, conf); err != nil {
 		logger.Fatalf(ctx, "unable to init storage: %v", err)
 	}
 }

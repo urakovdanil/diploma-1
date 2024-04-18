@@ -11,8 +11,9 @@ import (
 
 const (
 	defaultRunAddress           = "localhost:8080"
-	defaultDatabaseURI          = "postgres:5432"
+	defaultDatabaseURI          = "postgres://postgres:postgres@localhost:5432/praktikum?sslmode=disable"
 	defaultAccrualSystemAddress = "localhost:8081"
+	defaultMigrationsFolder     = "./internal/migrations"
 )
 
 var (
@@ -20,6 +21,7 @@ var (
 )
 
 type StartUp struct {
+	MigrationsFolder     string `env:"MIGRATIONS_FOLDER" json:"migrations_folder"`
 	RunAddress           string `env:"RUN_ADDRESS" json:"run_address"`
 	DatabaseURI          string `env:"DATABASE_URI" json:"database_uri"`
 	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS" json:"accrual_system_address"`
@@ -40,6 +42,7 @@ func New(_ context.Context) (*StartUp, error) {
 		RunAddress:           defaultRunAddress,
 		DatabaseURI:          defaultDatabaseURI,
 		AccrualSystemAddress: defaultAccrualSystemAddress,
+		MigrationsFolder:     defaultMigrationsFolder,
 	}
 
 	if err := env.Parse(res); err != nil {
@@ -50,6 +53,7 @@ func New(_ context.Context) (*StartUp, error) {
 	du := flag.String("d", res.DatabaseURI, fmt.Sprintf("address to connect to PostgreSQL, defaults to %s", defaultDatabaseURI))
 	asa := flag.String("r", res.AccrualSystemAddress, fmt.Sprintf("address to connect to accrual system, defaults to %s", defaultAccrualSystemAddress))
 	ll := flag.String("l", defaultLogLevel, fmt.Sprintf("application log level, defaults to %s", defaultLogLevel))
+	mf := flag.String("m", res.MigrationsFolder, fmt.Sprintf("path to migrations folder, defaults to %s", defaultMigrationsFolder))
 
 	if res.RunAddress == "" {
 		res.RunAddress = *ra
@@ -62,6 +66,9 @@ func New(_ context.Context) (*StartUp, error) {
 	}
 	if res.LogLevel == "" {
 		res.LogLevel = *ll
+	}
+	if res.MigrationsFolder == "" {
+		res.MigrationsFolder = *mf
 	}
 
 	return res, nil

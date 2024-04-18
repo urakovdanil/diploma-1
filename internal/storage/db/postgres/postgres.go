@@ -2,11 +2,13 @@ package postgres
 
 import (
 	"context"
+	"diploma-1/internal/config"
 	"diploma-1/internal/types"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Storage struct {
-	// TODO: implement
+	pool *pgxpool.Pool
 }
 
 func (s *Storage) GetUser(ctx context.Context, login string) (*types.User, error) {
@@ -14,7 +16,16 @@ func (s *Storage) GetUser(ctx context.Context, login string) (*types.User, error
 	return nil, nil
 }
 
-func New(ctx context.Context) (*Storage, error) {
-	// TODO: implement
-	return nil, nil
+func New(ctx context.Context, su *config.StartUp) (*Storage, error) {
+	if err := migrateUp(su); err != nil {
+		return nil, err
+	}
+	db, err := pgxpool.New(context.Background(), su.DatabaseURI)
+	if err != nil {
+		return nil, err
+	}
+	if err := db.Ping(ctx); err != nil {
+		return nil, err
+	}
+	return &Storage{pool: db}, nil
 }
