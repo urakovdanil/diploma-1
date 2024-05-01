@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"diploma-1/internal/api/auth"
+	middleware "diploma-1/internal/api/middleware"
 	"diploma-1/internal/config"
 	"diploma-1/internal/logger"
 	"diploma-1/internal/storage"
 	"errors"
 	"fmt"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"net/http"
 	"os"
 	"os/signal"
@@ -30,9 +31,11 @@ func main() {
 	}
 
 	router := chi.NewRouter()
-	// TODO: implement customResponseWrite
-	// TODO: implement logging middleware
-	router.Use(middleware.Recoverer)
+	router.Use(middleware.CustomizeResponseWriter)
+	router.Use(middleware.ResponseCompressor)
+	router.Use(middleware.RequestDecompressor)
+	router.Use(middleware.RequestLogger)
+	router.Use(chiMiddleware.Recoverer)
 
 	authRouter := auth.New()
 	router.Post(auth.RegisterPath, authRouter.RegisterHandlerFunc)
