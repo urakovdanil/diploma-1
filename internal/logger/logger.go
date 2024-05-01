@@ -19,7 +19,7 @@ func New(cfg *config.StartUp) {
 			os.Stdout,
 			&slog.HandlerOptions{
 				AddSource:   true,
-				Level:       logLevelsMap[cfg.LogLevel],
+				Level:       logLevelsMap[cfg.GetLogLevel()],
 				ReplaceAttr: replaceAttr,
 			}),
 	)
@@ -71,7 +71,7 @@ func log(ctx context.Context, message string, level slog.Level) {
 	}
 	var pcs [1]uintptr
 	runtime.Callers(3, pcs[:])
-	r := slog.NewRecord(time.Now(), slog.LevelError, message, pcs[0])
+	r := slog.NewRecord(time.Now(), level, message, pcs[0])
 	_ = l.Handler().Handle(ctx, r)
 	if level == slog.LevelError+1 {
 		os.Exit(1)
@@ -79,7 +79,6 @@ func log(ctx context.Context, message string, level slog.Level) {
 }
 
 func replaceAttr(_ []string, a slog.Attr) slog.Attr {
-	// Remove the directory from the source's filename.
 	if a.Key == slog.SourceKey {
 		source := a.Value.Any().(*slog.Source)
 		source.File = filepath.Base(source.File)

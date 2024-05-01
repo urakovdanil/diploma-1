@@ -3,4 +3,4 @@ run-pg:
 build:
 	cd cmd/gophermart && rm gophermart-binary || true && go build -o gophermart-binary *.go
 run-gophermart:
-	make run-pg && make build && ./cmd/gophermart/gophermart-binary
+	make run-pg && make build && ./cmd/gophermart/gophermart-binary -l=DEBUG -a=localhost:8080

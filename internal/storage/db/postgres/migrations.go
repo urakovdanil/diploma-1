@@ -8,7 +8,7 @@ import (
 )
 
 func migrateUp(su *config.StartUp) error {
-	db, err := sql.Open("pgx", su.DatabaseURI)
+	db, err := sql.Open("pgx", su.GetDatabaseURI())
 	if err != nil {
 		return err
 	}
@@ -16,7 +16,7 @@ func migrateUp(su *config.StartUp) error {
 		return err
 	}
 	defer db.Close()
-	if err := goose.Up(db, su.MigrationsFolder); err != nil {
+	if err := goose.Up(db, su.GetMigrationsFolder()); err != nil {
 		return err
 	}
 	return nil

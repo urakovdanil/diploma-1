@@ -8,7 +8,8 @@ import (
 )
 
 type Storage interface {
-	GetUser(ctx context.Context, login string) (*types.User, error)
+	CreateUser(ctx context.Context, user *types.User) (*types.User, error)
+	GetUserByLogin(ctx context.Context, login string) (*types.User, error)
 }
 
 var UsedStorage Storage
