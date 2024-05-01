@@ -3,6 +3,7 @@ package logger
 import (
 	"context"
 	"diploma-1/internal/config"
+	"diploma-1/internal/types"
 	"fmt"
 	"log/slog"
 	"os"
@@ -69,10 +70,15 @@ func log(ctx context.Context, message string, level slog.Level) {
 	if !l.Enabled(context.Background(), level) {
 		return
 	}
+	curLogger := l
+	internalRequestID := ctx.Value(types.CtxKeyRequestID)
+	if internalRequestID != nil {
+		curLogger = l.With(slog.String(string(types.CtxKeyRequestID), internalRequestID.(string)))
+	}
 	var pcs [1]uintptr
 	runtime.Callers(3, pcs[:])
 	r := slog.NewRecord(time.Now(), level, message, pcs[0])
-	_ = l.Handler().Handle(ctx, r)
+	_ = curLogger.Handler().Handle(ctx, r)
 	if level == slog.LevelError+1 {
 		os.Exit(1)
 	}

@@ -3,6 +3,9 @@ package middleware
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
+	"diploma-1/internal/types"
+	"github.com/google/uuid"
 	"io"
 	"net/http"
 	"strings"
@@ -40,6 +43,8 @@ func (w *customResponseWriter) ReadAll() ([]byte, error) {
 
 func CustomizeResponseWriter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		internalRequestID := uuid.New().String()
+		r = r.WithContext(context.WithValue(r.Context(), types.CtxKeyRequestID, internalRequestID))
 		crw := &customResponseWriter{
 			ResponseWriter: w,
 			buf:            bytes.NewBuffer(nil),

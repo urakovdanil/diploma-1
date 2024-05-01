@@ -17,8 +17,6 @@ import (
 	"time"
 )
 
-// TODO: добавить middleware с logger.With() для добавления трейса запроса
-
 func main() {
 	ctx := context.Background()
 	if err := config.New(ctx); err != nil {
@@ -32,9 +30,10 @@ func main() {
 
 	router := chi.NewRouter()
 	router.Use(middleware.CustomizeResponseWriter)
+	router.Use(middleware.RequestLogger)
+	router.Use(middleware.IsAuthenticated)
 	router.Use(middleware.ResponseCompressor)
 	router.Use(middleware.RequestDecompressor)
-	router.Use(middleware.RequestLogger)
 	router.Use(chiMiddleware.Recoverer)
 
 	authRouter := auth.New()
