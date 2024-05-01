@@ -17,3 +17,14 @@ func CreateOrder(ctx context.Context, order *types.Order) (*types.Order, error) 
 	}
 	return res, nil
 }
+
+func GetOrdersByUser(ctx context.Context, user *types.User) ([]types.Order, error) {
+	res, err := UsedStorage.GetOrdersByUser(ctx, user)
+	if err != nil {
+		if errors.Is(err, types.ErrOrderNotFound) {
+			return nil, err
+		}
+		return nil, fmt.Errorf("unexpected error on GetOrdersByUser: %w", err)
+	}
+	return res, nil
+}

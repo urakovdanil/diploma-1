@@ -128,6 +128,30 @@ func (s *Storage) CreateOrder(ctx context.Context, order *types.Order) (*types.O
 	return order, nil
 }
 
+func (s *Storage) GetOrdersByUser(ctx context.Context, user *types.User) ([]types.Order, error) {
+	orders := make([]types.Order, 0, 10)
+	if err := s.withTx(ctx, readCommittedTXOptions, func(tx pgx.Tx) error {
+		rows, err := tx.Query(ctx, ordersListByUser, user.ID)
+		if err != nil {
+			return err
+		}
+		for rows.Next() {
+			order := types.Order{}
+			if err = rows.Scan(&order.ID, &order.Number, &order.Status, &order.Accrual, &order.UserID, &order.CreatedAt); err != nil {
+				return err
+			}
+			orders = append(orders, order)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	if len(orders) == 0 {
+		return nil, types.ErrOrderNotFound
+	}
+	return orders, nil
+}
+
 func New(ctx context.Context, su *config.StartUp) (*Storage, error) {
 	if err := migrateUp(su); err != nil {
 		return nil, err

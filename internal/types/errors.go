@@ -13,4 +13,5 @@ var (
 	ErrInvalidOrderNumber               = errors.New("invalid order number")
 	ErrOrderAlreadyExistsForThisUser    = errors.New("order already exists for provided user")
 	ErrOrderAlreadyExistsForAnotherUser = errors.New("order already exists for another user")
+	ErrOrderNotFound                    = errors.New("no orders found")
 )

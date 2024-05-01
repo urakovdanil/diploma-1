@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"diploma-1/internal/storage"
 	"diploma-1/internal/types"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -40,6 +41,7 @@ func (o *Orders) validateInput(order string) error {
 		sum += digit
 		alternate = !alternate
 	}
+	fmt.Println("SUM: ", sum)
 	if sum%10 != 0 {
 		return types.ErrInvalidOrderNumber
 	}
@@ -64,10 +66,14 @@ func (o *Orders) CreateOrderHandlerFunc(w http.ResponseWriter, r *http.Request) 
 	}
 
 	user := r.Context().Value(types.CtxKeyUser).(*types.User)
+	if user == nil {
+		http.Error(w, "user not found in context", http.StatusInternalServerError)
+		return
+	}
 	order := &types.Order{
 		Number: orderNumber,
 		UserID: user.ID,
-		Status: types.OrderStatusProcessing,
+		Status: types.OrderStatusNew,
 	}
 	order, err := storage.CreateOrder(ctx, order)
 	if err != nil {
@@ -83,4 +89,29 @@ func (o *Orders) CreateOrderHandlerFunc(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	w.WriteHeader(http.StatusAccepted)
+}
+
+func (o *Orders) GetOrdersHandlerFunc(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	ctx := r.Context()
+	user := ctx.Value(types.CtxKeyUser).(*types.User)
+	if user == nil {
+		http.Error(w, "user not found in context", http.StatusInternalServerError)
+		return
+	}
+
+	orders, err := storage.GetOrdersByUser(ctx, user)
+	if err != nil {
+		if errors.Is(err, types.ErrOrderNotFound) {
+			http.Error(w, err.Error(), http.StatusNoContent)
+			return
+		}
+		http.Error(w, fmt.Sprintf("unable to get orders: %v", err), http.StatusInternalServerError)
+		return
+	}
+	if err = json.NewEncoder(w).Encode(orders); err != nil {
+		http.Error(w, fmt.Sprintf("unable to encode orders: %v", err), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }

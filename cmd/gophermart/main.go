@@ -43,6 +43,7 @@ func main() {
 
 	ordersRouter := orders.New()
 	router.Post(orders.Path, ordersRouter.CreateOrderHandlerFunc)
+	router.Get(orders.Path, ordersRouter.GetOrdersHandlerFunc)
 
 	srv := &http.Server{
 		Addr:    config.Applied.GetRunAddress(),

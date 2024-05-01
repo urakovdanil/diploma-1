@@ -12,6 +12,7 @@ type Storage interface {
 	GetUserByLogin(ctx context.Context, login string) (*types.User, error)
 
 	CreateOrder(ctx context.Context, order *types.Order) (*types.Order, error)
+	GetOrdersByUser(ctx context.Context, user *types.User) ([]types.Order, error)
 }
 
 var UsedStorage Storage
