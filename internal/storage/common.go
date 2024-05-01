@@ -10,6 +10,8 @@ import (
 type Storage interface {
 	CreateUser(ctx context.Context, user *types.User) (*types.User, error)
 	GetUserByLogin(ctx context.Context, login string) (*types.User, error)
+
+	CreateOrder(ctx context.Context, order *types.Order) (*types.Order, error)
 }
 
 var UsedStorage Storage

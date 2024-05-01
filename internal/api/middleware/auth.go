@@ -39,7 +39,7 @@ func IsAuthenticated(next http.Handler) http.Handler {
 			return config.Applied.GetJWTSecretKey(), nil
 		})
 		if err != nil {
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			http.Error(w, "unable to parse token", http.StatusUnauthorized)
 			return
 		}
 		if !token.Valid {
@@ -47,7 +47,7 @@ func IsAuthenticated(next http.Handler) http.Handler {
 			return
 		}
 		claims := token.Claims.(jwt.MapClaims)
-		if claims["exp"].(float64) > float64(time.Now().Unix()) {
+		if claims["exp"].(float64) <= float64(time.Now().Unix()) {
 			http.Error(w, "Token expired", http.StatusUnauthorized)
 			return
 		}

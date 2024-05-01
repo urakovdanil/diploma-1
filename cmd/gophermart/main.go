@@ -4,6 +4,7 @@ import (
 	"context"
 	"diploma-1/internal/api/auth"
 	middleware "diploma-1/internal/api/middleware"
+	"diploma-1/internal/api/orders"
 	"diploma-1/internal/config"
 	"diploma-1/internal/logger"
 	"diploma-1/internal/storage"
@@ -30,15 +31,18 @@ func main() {
 
 	router := chi.NewRouter()
 	router.Use(middleware.CustomizeResponseWriter)
-	router.Use(middleware.RequestLogger)
-	router.Use(middleware.IsAuthenticated)
 	router.Use(middleware.ResponseCompressor)
 	router.Use(middleware.RequestDecompressor)
+	router.Use(middleware.RequestLogger)
+	router.Use(middleware.IsAuthenticated)
 	router.Use(chiMiddleware.Recoverer)
 
 	authRouter := auth.New()
 	router.Post(auth.RegisterPath, authRouter.RegisterHandlerFunc)
 	router.Post(auth.LoginPath, authRouter.LoginHandlerFunc)
+
+	ordersRouter := orders.New()
+	router.Post(orders.Path, ordersRouter.CreateOrderHandlerFunc)
 
 	srv := &http.Server{
 		Addr:    config.Applied.GetRunAddress(),

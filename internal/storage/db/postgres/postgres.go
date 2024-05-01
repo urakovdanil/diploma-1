@@ -6,6 +6,7 @@ import (
 	"diploma-1/internal/logger"
 	"diploma-1/internal/types"
 	"errors"
+	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -95,6 +96,36 @@ func (s *Storage) CreateUser(ctx context.Context, user *types.User) (*types.User
 		return nil, err
 	}
 	return user, nil
+}
+
+func (s *Storage) CreateOrder(ctx context.Context, order *types.Order) (*types.Order, error) {
+	if err := s.withTx(ctx, readCommittedTXOptions, func(tx pgx.Tx) error {
+		existingOrder := &types.Order{}
+		err := tx.QueryRow(ctx, orderSelect, order.Number).Scan(&existingOrder.ID, &existingOrder.Number, &existingOrder.Status, &existingOrder.Accrual, &existingOrder.UserID)
+		if err == nil {
+			if existingOrder.UserID == order.UserID {
+				order = existingOrder
+				return types.ErrOrderAlreadyExistsForThisUser
+			}
+			return types.ErrOrderAlreadyExistsForAnotherUser
+		}
+		if !errors.Is(err, pgx.ErrNoRows) {
+			fmt.Println("HERE")
+			return err
+		}
+		if err = tx.QueryRow(ctx, orderInsert, order.Number, order.Status, order.Accrual, order.UserID).Scan(&order.ID, &order.Number, &order.Status, &order.Accrual, &order.UserID); err != nil {
+			// код выше должен гарантировать отсутствие дубликатов, проверка ниже для перестраховки
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == uniqueConstraintViolationCode {
+				return types.ErrOrderAlreadyExistsForThisUser
+			}
+			return err
+		}
+		return nil
+	}); err != nil {
+		return order, err
+	}
+	return order, nil
 }
 
 func New(ctx context.Context, su *config.StartUp) (*Storage, error) {
