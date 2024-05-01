@@ -103,10 +103,7 @@ func (a *Auth) RegisterHandlerFunc(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "something went wrong", http.StatusInternalServerError)
 		return
 	}
-	if _, err = w.Write([]byte(token)); err != nil {
-		http.Error(w, "something went wrong", http.StatusInternalServerError)
-		return
-	}
+	w.Header().Set("Authorization", "Bearer "+token)
 }
 
 func (a *Auth) LoginHandlerFunc(w http.ResponseWriter, r *http.Request) {
