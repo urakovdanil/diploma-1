@@ -22,7 +22,7 @@ func New() *Orders {
 	return &Orders{}
 }
 
-func (o *Orders) validateInput(order string) error {
+func (o *Orders) ValidateInput(order string) error {
 	if order == "" {
 		return types.ErrEmptyOrderNumber
 	}
@@ -56,7 +56,7 @@ func (o *Orders) CreateOrderHandlerFunc(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	orderNumber := string(buf.Bytes())
-	if err := o.validateInput(orderNumber); err != nil {
+	if err := o.ValidateInput(orderNumber); err != nil {
 		if errors.Is(err, types.ErrInvalidOrderNumber) {
 			http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 			return

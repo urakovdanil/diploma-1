@@ -14,4 +14,6 @@ var (
 	ErrOrderAlreadyExistsForThisUser    = errors.New("order already exists for provided user")
 	ErrOrderAlreadyExistsForAnotherUser = errors.New("order already exists for another user")
 	ErrOrderNotFound                    = errors.New("no orders found")
+
+	ErrInsufficientFunds = errors.New("insufficient funds")
 )

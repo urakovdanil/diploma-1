@@ -17,3 +17,13 @@ func GetBalanceByUser(ctx context.Context, user *types.User) (*types.Balance, er
 	}
 	return res, err
 }
+
+func WithdrawByUser(ctx context.Context, user *types.User, withdraw *types.Withdraw) error {
+	if err := UsedStorage.WithdrawByUser(ctx, user, withdraw); err != nil {
+		if errors.Is(err, types.ErrInsufficientFunds) || errors.Is(err, types.ErrOrderAlreadyExistsForThisUser) || errors.Is(err, types.ErrOrderAlreadyExistsForAnotherUser) {
+			return err
+		}
+		return fmt.Errorf("unexpected error on WithdrawByUser: %w", err)
+	}
+	return nil
+}

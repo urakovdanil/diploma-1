@@ -16,6 +16,7 @@ type Storage interface {
 	UpdateOrderFromAccrual(ctx context.Context, order *types.OrderFromAccrual) error
 
 	GetBalanceByUser(ctx context.Context, user *types.User) (*types.Balance, error)
+	WithdrawByUser(ctx context.Context, user *types.User, withdraw *types.Withdraw) error
 }
 
 var UsedStorage Storage

@@ -179,6 +179,39 @@ func (s *Storage) GetBalanceByUser(ctx context.Context, user *types.User) (*type
 	return balance, nil
 }
 
+func (s *Storage) WithdrawByUser(ctx context.Context, user *types.User, withdraw *types.Withdraw) error {
+	if err := s.withTx(ctx, readCommittedTXOptions, func(tx pgx.Tx) error {
+		existingOrder := &types.Order{}
+		err := tx.QueryRow(ctx, orderSelect, withdraw.Order).Scan(&existingOrder.ID, &existingOrder.Number, &existingOrder.Status, &existingOrder.Accrual, &existingOrder.UserID)
+		if err == nil {
+			if existingOrder.UserID == user.ID {
+				return types.ErrOrderAlreadyExistsForThisUser
+			}
+			return types.ErrOrderAlreadyExistsForAnotherUser
+		}
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return err
+		}
+		balance := &types.Balance{}
+		if err := tx.QueryRow(ctx, balanceSelectByUser, user.ID).Scan(&balance.Current, &balance.Withdrawn); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return types.ErrUserNotFound
+			}
+			return err
+		}
+		if balance.Current < withdraw.Sum {
+			return types.ErrInsufficientFunds
+		}
+		if _, err := tx.Exec(ctx, balanceWithdrawByUser, withdraw.Order, types.OrderStatusProcessed, -withdraw.Sum, user.ID); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+	return nil
+}
+
 func New(ctx context.Context, su *config.StartUp) (*Storage, error) {
 	if err := migrateUp(su); err != nil {
 		return nil, err
