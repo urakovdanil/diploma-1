@@ -16,4 +16,11 @@ FROM	orders
 WHERE 	user_id = $1 AND status = 'PROCESSED';
 `
 	balanceWithdrawByUser = `INSERT INTO orders (number, status, accrual, user_id) VALUES ($1, $2, $3, $4);`
+	withdrawalsByUser     = `
+SELECT 	number, -accrual, created_at 
+FROM 	orders 
+WHERE 	user_id = $1 
+  		AND status = 'PROCESSED'
+		AND accrual < 0
+ORDER BY created_at DESC;`
 )

@@ -17,6 +17,7 @@ type Storage interface {
 
 	GetBalanceByUser(ctx context.Context, user *types.User) (*types.Balance, error)
 	WithdrawByUser(ctx context.Context, user *types.User, withdraw *types.Withdraw) error
+	GetWithdrawalsByUser(ctx context.Context, user *types.User) ([]types.WithdrawWithTS, error)
 }
 
 var UsedStorage Storage

@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	Path         = "/api/user/balance"
-	WithdrawPath = "/api/user/balance/withdraw"
+	Path             = "/api/user/balance"
+	WithdrawPath     = "/api/user/balance/withdraw"
+	WithdrawListPath = "/api/user/withdrawals"
 )
 
 type Balance struct{}
@@ -73,6 +74,30 @@ func (b *Balance) WithdrawHandlerFunc(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		http.Error(w, fmt.Sprintf("unable to withdraw balance: %v", err), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (b *Balance) GetWithdrawalsHandlerFunc(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	ctx := r.Context()
+	user := ctx.Value(types.CtxKeyUser).(*types.User)
+	if user == nil {
+		http.Error(w, "user not found in context", http.StatusInternalServerError)
+		return
+	}
+	withdrawals, err := storage.GetWithdrawalsByUser(ctx, user)
+	if err != nil {
+		if errors.Is(err, types.ErrOrderNotFound) {
+			http.Error(w, err.Error(), http.StatusNoContent)
+			return
+		}
+		http.Error(w, fmt.Sprintf("unable to get withdrawals: %v", err), http.StatusInternalServerError)
+		return
+	}
+	if err = json.NewEncoder(w).Encode(withdrawals); err != nil {
+		http.Error(w, fmt.Sprintf("unable to encode withdrawals: %v", err), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)

@@ -212,6 +212,33 @@ func (s *Storage) WithdrawByUser(ctx context.Context, user *types.User, withdraw
 	return nil
 }
 
+func (s *Storage) GetWithdrawalsByUser(ctx context.Context, user *types.User) ([]types.WithdrawWithTS, error) {
+	res := make([]types.WithdrawWithTS, 0, 10)
+	if err := s.withTx(ctx, readCommittedTXOptions, func(tx pgx.Tx) error {
+		rows, err := tx.Query(ctx, withdrawalsByUser, user.ID)
+		if err != nil {
+			return err
+		}
+		for rows.Next() {
+			if rows.Err() != nil {
+				return err
+			}
+			withdraw := types.WithdrawWithTS{Withdraw: &types.Withdraw{}}
+			if err = rows.Scan(&withdraw.Order, &withdraw.Sum, &withdraw.ProcessedAt); err != nil {
+				return err
+			}
+			res = append(res, withdraw)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	if len(res) == 0 {
+		return nil, types.ErrOrderNotFound
+	}
+	return res, nil
+}
+
 func New(ctx context.Context, su *config.StartUp) (*Storage, error) {
 	if err := migrateUp(su); err != nil {
 		return nil, err

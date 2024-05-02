@@ -55,6 +55,7 @@ func main() {
 	balanceRouter := balance.New()
 	router.Get(balance.Path, balanceRouter.GetBalanceHandlerFunc)
 	router.Post(balance.WithdrawPath, balanceRouter.WithdrawHandlerFunc)
+	router.Get(balance.WithdrawListPath, balanceRouter.GetWithdrawalsHandlerFunc)
 
 	srv := &http.Server{
 		Addr:    config.Applied.GetRunAddress(),

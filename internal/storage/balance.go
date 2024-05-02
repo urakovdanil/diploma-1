@@ -27,3 +27,14 @@ func WithdrawByUser(ctx context.Context, user *types.User, withdraw *types.Withd
 	}
 	return nil
 }
+
+func GetWithdrawalsByUser(ctx context.Context, user *types.User) ([]types.WithdrawWithTS, error) {
+	res, err := UsedStorage.GetWithdrawalsByUser(ctx, user)
+	if err != nil {
+		if errors.Is(err, types.ErrUserNotFound) {
+			return nil, err
+		}
+		return nil, fmt.Errorf("unexpected error on GetWithdrawalsByUser: %w", err)
+	}
+	return res, nil
+}
