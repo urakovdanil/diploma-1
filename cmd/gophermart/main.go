@@ -4,6 +4,7 @@ import (
 	"context"
 	"diploma-1/internal/accrual"
 	"diploma-1/internal/api/auth"
+	"diploma-1/internal/api/balance"
 	middleware "diploma-1/internal/api/middleware"
 	"diploma-1/internal/api/orders"
 	"diploma-1/internal/config"
@@ -18,6 +19,8 @@ import (
 	"os/signal"
 	"time"
 )
+
+// TODO: вернуться к клиенту для accrual после реализации оставшихся ручек
 
 func main() {
 	ctx := context.Background()
@@ -48,6 +51,9 @@ func main() {
 	ordersRouter := orders.New()
 	router.Post(orders.Path, ordersRouter.CreateOrderHandlerFunc)
 	router.Get(orders.Path, ordersRouter.GetOrdersHandlerFunc)
+
+	balanceRouter := balance.New()
+	router.Get(balance.Path, balanceRouter.GetBalanceHandlerFunc)
 
 	srv := &http.Server{
 		Addr:    config.Applied.GetRunAddress(),

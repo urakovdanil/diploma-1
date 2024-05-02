@@ -8,4 +8,11 @@ const (
 	orderSelect            = `SELECT id, number, status, accrual, user_id FROM orders WHERE number = $1;`
 	ordersListByUser       = `SELECT id, number, status, accrual, user_id, created_at FROM orders WHERE user_id = $1 ORDER BY created_at DESC;`
 	orderUpdateFromAccrual = `UPDATE orders SET status = $1, accrual = $2 WHERE number = $3;`
+
+	balanceSelectByUser = `
+SELECT 	COALESCE(SUM(accrual), 0) AS current,
+        COALESCE(SUM(CASE WHEN accrual < 0 THEN -accrual ELSE 0 END), 0) AS withdrawn
+FROM	orders
+WHERE 	user_id = $1 AND status = 'PROCESSED';
+`
 )

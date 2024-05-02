@@ -6,14 +6,14 @@ type Order struct {
 	ID        int64       `json:"-"`
 	Number    string      `json:"number"`
 	Status    OrderStatus `json:"status"`
-	Accrual   int64       `json:"accrual,omitempty"`
+	Accrual   float64     `json:"accrual,omitempty"`
 	UserID    int64       `json:"-"`
 	CreatedAt time.Time   `json:"uploaded_at"`
 }
 type OrderFromAccrual struct {
 	Number  string      `json:"order"`
 	Status  OrderStatus `json:"status"`
-	Accrual int64       `json:"accrual"`
+	Accrual float64     `json:"accrual"`
 }
 
 type OrderStatus string

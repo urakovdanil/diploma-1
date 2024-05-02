@@ -6,7 +6,6 @@ import (
 	"diploma-1/internal/logger"
 	"diploma-1/internal/types"
 	"errors"
-	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -110,7 +109,6 @@ func (s *Storage) CreateOrder(ctx context.Context, order *types.Order) (*types.O
 			return types.ErrOrderAlreadyExistsForAnotherUser
 		}
 		if !errors.Is(err, pgx.ErrNoRows) {
-			fmt.Println("HERE")
 			return err
 		}
 		if err = tx.QueryRow(ctx, orderInsert, order.Number, order.Status, order.Accrual, order.UserID).Scan(&order.ID, &order.Number, &order.Status, &order.Accrual, &order.UserID); err != nil {
@@ -163,6 +161,22 @@ func (s *Storage) UpdateOrderFromAccrual(ctx context.Context, order *types.Order
 		return err
 	}
 	return nil
+}
+
+func (s *Storage) GetBalanceByUser(ctx context.Context, user *types.User) (*types.Balance, error) {
+	balance := &types.Balance{}
+	if err := s.withTx(ctx, readCommittedTXOptions, func(tx pgx.Tx) error {
+		if err := tx.QueryRow(ctx, balanceSelectByUser, user.ID).Scan(&balance.Current, &balance.Withdrawn); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return types.ErrUserNotFound
+			}
+			return err
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return balance, nil
 }
 
 func New(ctx context.Context, su *config.StartUp) (*Storage, error) {

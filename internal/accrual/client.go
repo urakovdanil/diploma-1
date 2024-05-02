@@ -74,7 +74,6 @@ mainLoop:
 			<-cl.notificationChan
 		}
 		resp, err := cl.client.R().Get(fmt.Sprintf(accrualURITemplate, ord.Number))
-		fmt.Println("HERE2", resp.Request.URL)
 		if err != nil {
 			logger.Errorf(ctx, "unexpected error on request to accrual system: %v", err)
 			continue mainLoop
@@ -125,7 +124,6 @@ func New(ctx context.Context, su *config.StartUp) error {
 		canSend:           true,
 		notificationChan:  make(chan struct{}),
 	}
-	fmt.Println("HERE", fmt.Sprintf("http://%s", su.GetAccrualSystemAddress()))
 	client.client = resty.New().
 		SetBaseURL(fmt.Sprintf("http://%s", su.GetAccrualSystemAddress())).
 		SetRateLimiter(rate.NewLimiter(rate.Limit(clientRateLimit), clientBurst)).
