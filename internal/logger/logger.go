@@ -27,7 +27,7 @@ func New(cfg *config.StartUp) {
 }
 
 func Debug(ctx context.Context, message string) {
-	log(ctx, message, slog.LevelError)
+	log(ctx, message, slog.LevelDebug)
 }
 
 func Debugf(ctx context.Context, format string, args ...interface{}) {

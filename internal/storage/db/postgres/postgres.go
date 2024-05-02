@@ -152,6 +152,19 @@ func (s *Storage) GetOrdersByUser(ctx context.Context, user *types.User) ([]type
 	return orders, nil
 }
 
+func (s *Storage) UpdateOrderFromAccrual(ctx context.Context, order *types.OrderFromAccrual) error {
+	if err := s.withTx(ctx, readCommittedTXOptions, func(tx pgx.Tx) error {
+		ct, err := tx.Exec(ctx, orderUpdateFromAccrual, order.Status, order.Accrual, order.Number)
+		if ct.RowsAffected() == 0 {
+			return types.ErrOrderNotFound
+		}
+		return err
+	}); err != nil {
+		return err
+	}
+	return nil
+}
+
 func New(ctx context.Context, su *config.StartUp) (*Storage, error) {
 	if err := migrateUp(su); err != nil {
 		return nil, err

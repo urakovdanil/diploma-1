@@ -13,6 +13,7 @@ type Storage interface {
 
 	CreateOrder(ctx context.Context, order *types.Order) (*types.Order, error)
 	GetOrdersByUser(ctx context.Context, user *types.User) ([]types.Order, error)
+	UpdateOrderFromAccrual(ctx context.Context, order *types.OrderFromAccrual) error
 }
 
 var UsedStorage Storage

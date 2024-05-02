@@ -28,3 +28,13 @@ func GetOrdersByUser(ctx context.Context, user *types.User) ([]types.Order, erro
 	}
 	return res, nil
 }
+
+func UpdateOrderFromAccrual(ctx context.Context, order *types.OrderFromAccrual) error {
+	if err := UsedStorage.UpdateOrderFromAccrual(ctx, order); err != nil {
+		if errors.Is(err, types.ErrOrderNotFound) {
+			return err
+		}
+		return fmt.Errorf("unexpected error on UpdateOrderFromAccrual: %w", err)
+	}
+	return nil
+}

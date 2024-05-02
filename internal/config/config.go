@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	defaultRunAddress           = "localhost:8080"
+	defaultRunAddress           = "localhost:8081"
 	defaultDatabaseURI          = "postgres://postgres:postgres@localhost:5432/praktikum?sslmode=disable"
-	defaultAccrualSystemAddress = "localhost:8081"
+	defaultAccrualSystemAddress = "localhost:8080"
 	defaultMigrationsFolder     = "./internal/migrations"
 	defaultJWTTokenTTLMinutes   = 60
 )

@@ -10,6 +10,11 @@ type Order struct {
 	UserID    int64       `json:"-"`
 	CreatedAt time.Time   `json:"uploaded_at"`
 }
+type OrderFromAccrual struct {
+	Number  string      `json:"order"`
+	Status  OrderStatus `json:"status"`
+	Accrual int64       `json:"accrual"`
+}
 
 type OrderStatus string
 
@@ -20,3 +25,8 @@ const (
 	OrderStatusInvalid    OrderStatus = "INVALID"
 	OrderStatusRegistered OrderStatus = "REGISTERED"
 )
+
+var FinalOrderStatuses = map[OrderStatus]struct{}{
+	OrderStatusProcessed: {},
+	OrderStatusInvalid:   {},
+}

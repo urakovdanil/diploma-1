@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"diploma-1/internal/accrual"
 	"diploma-1/internal/api/auth"
 	middleware "diploma-1/internal/api/middleware"
 	"diploma-1/internal/api/orders"
@@ -27,6 +28,9 @@ func main() {
 	logger.New(config.Applied)
 	if err := storage.New(ctx, config.Applied); err != nil {
 		logger.Fatalf(ctx, "unable to init storage: %v", err)
+	}
+	if err := accrual.New(ctx, config.Applied); err != nil {
+		logger.Fatalf(ctx, "unable to init accrual: %v", err)
 	}
 
 	router := chi.NewRouter()
