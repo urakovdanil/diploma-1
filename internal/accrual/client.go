@@ -82,7 +82,6 @@ mainLoop:
 	for {
 		select {
 		case <-breakCtx.Done():
-			fmt.Println("done")
 			logger.Errorf(ctx, "tracking of order %s was canceled on shutdown", ord.Number)
 			break mainLoop
 		default:
@@ -132,10 +131,7 @@ mainLoop:
 
 func (cl *c) run() {
 	ctx, cancel := context.WithCancel(context.Background())
-	defer func() {
-		fmt.Println("CANCELED")
-		cancel()
-	}()
+	defer cancel()
 	for ord := range cl.ordersToBeUpdated {
 		logger.Debugf(ctx, "processing order %s from request %s", ord.Number, ord.requestID)
 		cl.requestsWg.Add(1)
