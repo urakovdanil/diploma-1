@@ -7,6 +7,7 @@ import (
 	"diploma-1/internal/api/balance"
 	middleware "diploma-1/internal/api/middleware"
 	"diploma-1/internal/api/orders"
+	"diploma-1/internal/closer"
 	"diploma-1/internal/config"
 	"diploma-1/internal/logger"
 	"diploma-1/internal/storage"
@@ -20,10 +21,9 @@ import (
 	"time"
 )
 
-// TODO: вернуться к клиенту для accrual после реализации оставшихся ручек
-
 func main() {
 	ctx := context.Background()
+	closer.New()
 	if err := config.New(ctx); err != nil {
 		fmt.Printf("unable to collect config: %v", err)
 	}
@@ -80,5 +80,7 @@ func main() {
 	if err := srv.Shutdown(ctx); err != nil {
 		logger.Errorf(ctx, "unable to shutdown server: %v", err)
 	}
-	// TODO: implement closer
+	if errs := closer.Close(); len(errs) > 0 {
+		logger.Errorf(ctx, "unable to close resources: %v", errs)
+	}
 }

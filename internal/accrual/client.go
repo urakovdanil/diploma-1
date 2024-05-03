@@ -2,12 +2,14 @@ package accrual
 
 import (
 	"context"
+	"diploma-1/internal/closer"
 	"diploma-1/internal/config"
 	"diploma-1/internal/logger"
 	"diploma-1/internal/storage"
 	"diploma-1/internal/types"
 	"encoding/json"
 	"fmt"
+	"github.com/cenkalti/backoff"
 	"github.com/go-resty/resty/v2"
 	"golang.org/x/time/rate"
 	"net/http"
@@ -29,6 +31,13 @@ type c struct {
 	canSend           bool
 	notificationChan  chan struct{}
 	mu                sync.RWMutex
+	requestsWg        sync.WaitGroup
+}
+
+func (cl *c) close() error {
+	close(cl.ordersToBeUpdated)
+	cl.requestsWg.Wait()
+	return nil
 }
 
 func (cl *c) getCanSend() bool {
@@ -60,21 +69,36 @@ func (cl *c) freezeSending(ctx context.Context, retryAfterHeaderValue string) {
 		cl.setCanSend(false)
 		time.Sleep(time.Duration(retryAfter) * time.Second)
 		close(cl.notificationChan)
+		cl.notificationChan = make(chan struct{})
 		cl.setCanSend(true)
 	}()
 }
 
-func (cl *c) checkUpdate(ord *order) {
+func (cl *c) checkUpdate(breakCtx context.Context, ord *order) {
+	defer cl.requestsWg.Done()
 	ctx := context.WithValue(context.Background(), types.CtxKeyRequestID, ord.requestID)
 	bo := newBackoff()
 mainLoop:
 	for {
-		time.Sleep(bo.NextBackOff())
+		select {
+		case <-breakCtx.Done():
+			fmt.Println("done")
+			logger.Errorf(ctx, "tracking of order %s was canceled on shutdown", ord.Number)
+			break mainLoop
+		default:
+		}
+		nextBO := bo.NextBackOff()
+		if nextBO == backoff.Stop {
+			logger.Error(ctx, "accrual system did not meet deadline")
+			break mainLoop
+		}
+		time.Sleep(nextBO)
 		if !cl.getCanSend() {
 			<-cl.notificationChan
 		}
-		resp, err := cl.client.R().Get(fmt.Sprintf(accrualURITemplate, ord.Number))
-		ctx = context.WithValue(ctx, types.CtxUsedAccrualAddress, resp.Request.URL)
+		ctx = context.WithValue(ctx, types.CtxUsedAccrualAddress, client.client.BaseURL+fmt.Sprintf(accrualURITemplate, ord.Number))
+		req := cl.client.R().SetContext(ctx)
+		resp, err := req.Get(fmt.Sprintf(accrualURITemplate, ord.Number))
 		if err != nil {
 			logger.Errorf(ctx, "unexpected error on request to accrual system: %v", err)
 			continue mainLoop
@@ -107,10 +131,15 @@ mainLoop:
 }
 
 func (cl *c) run() {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer func() {
+		fmt.Println("CANCELED")
+		cancel()
+	}()
 	for ord := range cl.ordersToBeUpdated {
 		logger.Debugf(ctx, "processing order %s from request %s", ord.Number, ord.requestID)
-		go cl.checkUpdate(ord)
+		cl.requestsWg.Add(1)
+		go cl.checkUpdate(ctx, ord)
 	}
 }
 
@@ -129,7 +158,7 @@ func New(ctx context.Context, su *config.StartUp) error {
 		SetBaseURL(su.GetAccrualSystemAddress()).
 		SetRateLimiter(rate.NewLimiter(rate.Limit(clientRateLimit), clientBurst)).
 		OnBeforeRequest(func(c *resty.Client, r *resty.Request) error {
-			logger.Debugf(context.Background(), "sending '%v %v'", r.Method, r.URL)
+			logger.Debugf(r.Context(), "sending '%v %v'", r.Method, r.URL)
 			return nil
 		}).
 		OnAfterResponse(func(c *resty.Client, r *resty.Response) error {
@@ -137,6 +166,7 @@ func New(ctx context.Context, su *config.StartUp) error {
 			return nil
 		})
 	go client.run()
+	closer.Add(client.close)
 	logger.Error(ctx, "initialized accrual client")
 	return nil
 }

@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"diploma-1/internal/closer"
 	"diploma-1/internal/config"
 	"diploma-1/internal/logger"
 	"diploma-1/internal/types"
@@ -22,14 +23,14 @@ var readCommittedTXOptions = pgx.TxOptions{
 	IsoLevel: pgx.ReadCommitted,
 }
 
-type Storage struct {
-	pool *pgxpool.Pool
-}
-
 func getFunctionName(f func(tx pgx.Tx) error) string {
 	fullFuncName := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
 	parts := strings.Split(fullFuncName, ".")
 	return parts[len(parts)-2]
+}
+
+type Storage struct {
+	pool *pgxpool.Pool
 }
 
 func (s *Storage) withTx(ctx context.Context, txOptions pgx.TxOptions, f func(tx pgx.Tx) error) error {
@@ -250,5 +251,9 @@ func New(ctx context.Context, su *config.StartUp) (*Storage, error) {
 	if err := db.Ping(ctx); err != nil {
 		return nil, err
 	}
+	closer.Add(func() error {
+		db.Close()
+		return nil
+	})
 	return &Storage{pool: db}, nil
 }
