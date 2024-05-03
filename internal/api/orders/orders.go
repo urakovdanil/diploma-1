@@ -55,7 +55,7 @@ func (o *Orders) CreateOrderHandlerFunc(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, fmt.Sprintf("unable to read request body: %v", err), http.StatusBadRequest)
 		return
 	}
-	orderNumber := string(buf.Bytes())
+	orderNumber := buf.String()
 	if err := o.ValidateInput(orderNumber); err != nil {
 		if errors.Is(err, types.ErrInvalidOrderNumber) {
 			http.Error(w, err.Error(), http.StatusUnprocessableEntity)
