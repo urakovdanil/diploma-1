@@ -6,3 +6,14 @@ run-accrual:
 	./cmd/accrual/accrual_darwin_arm64
 run-gophermart:
 	make run-pg && make build && ./cmd/gophermart/gophermart-binary -l=DEBUG -a=localhost:8080 -r=localhost:8081
+test:
+	make build && ./gophermarttest-darwin-arm64 \
+		-test.v -test.run=^TestGophermart$$ \
+		-gophermart-binary-path=cmd/gophermart/gophermart-binary \
+		-gophermart-host=localhost \
+		-gophermart-port=8081 \
+		-gophermart-database-uri="postgres://postgres:postgres@localhost:5432/praktikum?sslmode=disable" \
+		-accrual-binary-path=cmd/accrual/accrual_darwin_arm64 \
+		-accrual-host=localhost \
+		-accrual-port=8080 \
+		-accrual-database-uri="postgres://postgres:postgres@localhost:5432/praktikum?sslmode=disable"

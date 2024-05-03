@@ -110,9 +110,9 @@ func (o *Orders) GetOrdersHandlerFunc(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("unable to get orders: %v", err), http.StatusInternalServerError)
 		return
 	}
+	w.WriteHeader(http.StatusOK)
 	if err = json.NewEncoder(w).Encode(orders); err != nil {
 		http.Error(w, fmt.Sprintf("unable to encode orders: %v", err), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
 }

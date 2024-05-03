@@ -74,6 +74,7 @@ mainLoop:
 			<-cl.notificationChan
 		}
 		resp, err := cl.client.R().Get(fmt.Sprintf(accrualURITemplate, ord.Number))
+		ctx = context.WithValue(ctx, types.CtxUsedAccrualAddress, resp.Request.URL)
 		if err != nil {
 			logger.Errorf(ctx, "unexpected error on request to accrual system: %v", err)
 			continue mainLoop
@@ -88,7 +89,7 @@ mainLoop:
 			logger.Debug(ctx, "accrual system returned 204")
 		case http.StatusOK:
 			var fromAccrual *types.OrderFromAccrual
-			if err := json.Unmarshal(resp.Body(), fromAccrual); err != nil {
+			if err := json.Unmarshal(resp.Body(), &fromAccrual); err != nil {
 				logger.Warnf(ctx, "unexpected error on unmarshal response from accrual system: %v", err)
 				break statusCodeSwitch
 			}
@@ -125,7 +126,7 @@ func New(ctx context.Context, su *config.StartUp) error {
 		notificationChan:  make(chan struct{}),
 	}
 	client.client = resty.New().
-		SetBaseURL(fmt.Sprintf("http://%s", su.GetAccrualSystemAddress())).
+		SetBaseURL(su.GetAccrualSystemAddress()).
 		SetRateLimiter(rate.NewLimiter(rate.Limit(clientRateLimit), clientBurst)).
 		OnBeforeRequest(func(c *resty.Client, r *resty.Request) error {
 			logger.Debugf(context.Background(), "sending '%v %v'", r.Method, r.URL)

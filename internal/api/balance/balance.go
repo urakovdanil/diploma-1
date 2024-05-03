@@ -37,13 +37,14 @@ func (b *Balance) GetBalanceHandlerFunc(w http.ResponseWriter, r *http.Request) 
 			balance = &types.Balance{}
 		} else {
 			http.Error(w, fmt.Sprintf("unable to get balance: %v", err), http.StatusInternalServerError)
+			return
 		}
 	}
+	w.WriteHeader(http.StatusOK)
 	if err = json.NewEncoder(w).Encode(balance); err != nil {
 		http.Error(w, fmt.Sprintf("unable to encode balance: %v", err), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func (b *Balance) WithdrawHandlerFunc(w http.ResponseWriter, r *http.Request) {
@@ -96,9 +97,9 @@ func (b *Balance) GetWithdrawalsHandlerFunc(w http.ResponseWriter, r *http.Reque
 		http.Error(w, fmt.Sprintf("unable to get withdrawals: %v", err), http.StatusInternalServerError)
 		return
 	}
+	w.WriteHeader(http.StatusOK)
 	if err = json.NewEncoder(w).Encode(withdrawals); err != nil {
 		http.Error(w, fmt.Sprintf("unable to encode withdrawals: %v", err), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
 }

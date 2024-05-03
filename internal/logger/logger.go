@@ -71,9 +71,11 @@ func log(ctx context.Context, message string, level slog.Level) {
 		return
 	}
 	curLogger := l
-	internalRequestID := ctx.Value(types.CtxKeyRequestID)
-	if internalRequestID != nil {
+	if internalRequestID := ctx.Value(types.CtxKeyRequestID); internalRequestID != nil {
 		curLogger = l.With(slog.String(string(types.CtxKeyRequestID), internalRequestID.(string)))
+	}
+	if usedAccrualAddress := ctx.Value(types.CtxUsedAccrualAddress); usedAccrualAddress != nil {
+		curLogger = curLogger.With(slog.String(string(types.CtxUsedAccrualAddress), usedAccrualAddress.(string)))
 	}
 	var pcs [1]uintptr
 	runtime.Callers(3, pcs[:])

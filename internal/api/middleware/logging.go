@@ -18,7 +18,7 @@ func RequestLogger(next http.Handler) http.Handler {
 			crw.statusCode = http.StatusOK
 		}
 		took := time.Since(start)
-		if crw.statusCode >= http.StatusBadRequest {
+		if crw.statusCode >= http.StatusInternalServerError {
 			logger.Errorf(r.Context(), "request: %v, %v, took: %v; reponse: %v, size: %v, details: %v", r.Method, r.URL.Path, took, crw.statusCode, crw.responseSize, crw.buf.String())
 		} else {
 			logger.Debugf(r.Context(), "request: %v, %v, took: %v; reponse: %v, size: %v", r.Method, r.URL.Path, took, crw.statusCode, crw.responseSize)
