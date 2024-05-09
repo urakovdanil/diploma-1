@@ -5,7 +5,7 @@ build:
 run-accrual:
 	./cmd/accrual/accrual_darwin_arm64
 run-gophermart:
-	make run-pg && make build && ./cmd/gophermart/gophermart-binary -l=DEBUG -a=localhost:8080 -r=localhost:8081
+	make run-pg && make build && ./cmd/gophermart/gophermart-binary -l=INFO -a=localhost:8080 -r=localhost:8081
 test:
 	make build && ./gophermarttest-darwin-arm64 \
 		-test.v -test.run=^TestGophermart$$ \
@@ -17,3 +17,6 @@ test:
 		-accrual-host=localhost \
 		-accrual-port=8080 \
 		-accrual-database-uri="postgres://postgres:postgres@localhost:5432/praktikum?sslmode=disable"
+get-coverage:
+	go test -v -coverpkg=./... -coverprofile=coverage.out -covermode=count ./... \
+    && go tool cover -func coverage.out | grep total | awk '{print $3}'

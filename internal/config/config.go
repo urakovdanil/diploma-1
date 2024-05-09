@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"github.com/caarlos0/env/v6"
 	"log/slog"
+	"os"
+	"strings"
 	"sync"
 )
 
@@ -86,26 +88,29 @@ func (c *StartUp) GetMigrationsFolder() string {
 
 // New ...
 func New(_ context.Context) error {
-	res := &StartUp{
-		RunAddress:           defaultRunAddress,
-		DatabaseURI:          defaultDatabaseURI,
-		AccrualSystemAddress: defaultAccrualSystemAddress,
-		MigrationsFolder:     defaultMigrationsFolder,
-		JWTTokenTTLMinutes:   defaultJWTTokenTTLMinutes,
-	}
+	res := &StartUp{}
 
 	if err := env.Parse(res); err != nil {
 		return err
 	}
+	flagSet := flag.NewFlagSet("flags", flag.ContinueOnError)
+	ra := flagSet.String("a", defaultRunAddress, fmt.Sprintf("address to run server on, defaults to %s", defaultRunAddress))
+	du := flagSet.String("d", defaultDatabaseURI, fmt.Sprintf("address to connect to PostgreSQL, defaults to %s", defaultDatabaseURI))
+	asa := flagSet.String("r", defaultAccrualSystemAddress, fmt.Sprintf("address to connect to accrual system, defaults to %s", defaultAccrualSystemAddress))
+	ll := flagSet.String("l", defaultLogLevel, fmt.Sprintf("application log level, defaults to %s", defaultLogLevel))
+	mf := flagSet.String("m", defaultMigrationsFolder, fmt.Sprintf("path to migrations folder, defaults to %s", defaultMigrationsFolder))
+	jwtTTL := flagSet.Int("j", defaultJWTTokenTTLMinutes, fmt.Sprintf("jwt token lifetime in minutes, defaults to %d", defaultJWTTokenTTLMinutes))
 
-	ra := flag.String("a", res.RunAddress, fmt.Sprintf("address to run server on, defaults to %s", defaultRunAddress))
-	du := flag.String("d", res.DatabaseURI, fmt.Sprintf("address to connect to PostgreSQL, defaults to %s", defaultDatabaseURI))
-	asa := flag.String("r", res.AccrualSystemAddress, fmt.Sprintf("address to connect to accrual system, defaults to %s", defaultAccrualSystemAddress))
-	ll := flag.String("l", defaultLogLevel, fmt.Sprintf("application log level, defaults to %s", defaultLogLevel))
-	mf := flag.String("m", res.MigrationsFolder, fmt.Sprintf("path to migrations folder, defaults to %s", defaultMigrationsFolder))
-	jwtTTL := flag.Int("j", res.JWTTokenTTLMinutes, fmt.Sprintf("jwt token lifetime in minutes, defaults to %d", defaultJWTTokenTTLMinutes))
-	flag.Parse()
-
+	cla := make([]string, len(os.Args)-1)
+	for _, arg := range os.Args[1:] {
+		if strings.HasPrefix(arg, "test") {
+			continue
+		}
+		cla = append(cla, arg)
+	}
+	if err := flagSet.Parse(cla); err != nil {
+		return err
+	}
 	if res.RunAddress == "" {
 		res.RunAddress = *ra
 	}

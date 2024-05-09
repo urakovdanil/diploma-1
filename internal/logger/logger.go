@@ -67,7 +67,7 @@ func Fatalf(ctx context.Context, format string, args ...interface{}) {
 }
 
 func log(ctx context.Context, message string, level slog.Level) {
-	if !l.Enabled(context.Background(), level) {
+	if l == nil || !l.Enabled(context.Background(), level) {
 		return
 	}
 	curLogger := l

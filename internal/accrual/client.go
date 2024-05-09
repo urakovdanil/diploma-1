@@ -57,6 +57,7 @@ func (cl *c) freezeSending(ctx context.Context, retryAfterHeaderValue string) {
 		if !cl.getCanSend() {
 			return
 		}
+		cl.setCanSend(false)
 		if retryAfterHeaderValue == "" {
 			logger.Warnf(ctx, "accrual system returned empty retry-after: set to %s", defaultRetryAfterHeaderValue)
 			retryAfterHeaderValue = defaultRetryAfterHeaderValue
@@ -66,7 +67,6 @@ func (cl *c) freezeSending(ctx context.Context, retryAfterHeaderValue string) {
 			logger.Warnf(ctx, "accrual system returned invalid retry-after %s: %v", retryAfterHeaderValue, err)
 			retryAfter, _ = strconv.Atoi(defaultRetryAfterHeaderValue)
 		}
-		cl.setCanSend(false)
 		time.Sleep(time.Duration(retryAfter) * time.Second)
 		close(cl.notificationChan)
 		cl.notificationChan = make(chan struct{})
@@ -153,7 +153,7 @@ func New(ctx context.Context, su *config.StartUp) error {
 	client.client = resty.New().
 		SetBaseURL(su.GetAccrualSystemAddress()).
 		SetRateLimiter(rate.NewLimiter(rate.Limit(clientRateLimit), clientBurst)).
-		OnBeforeRequest(func(c *resty.Client, r *resty.Request) error {
+		OnBeforeRequest(func(_ *resty.Client, r *resty.Request) error {
 			logger.Debugf(r.Context(), "sending '%v %v'", r.Method, r.URL)
 			return nil
 		}).
@@ -164,5 +164,16 @@ func New(ctx context.Context, su *config.StartUp) error {
 	go client.run()
 	closer.Add(client.close)
 	logger.Error(ctx, "initialized accrual client")
+	return nil
+}
+
+func newMock(ctx context.Context, su *config.StartUp) error {
+	client = &c{
+		ordersToBeUpdated: make(chan *order, 100),
+		canSend:           true,
+		notificationChan:  make(chan struct{}),
+		client:            resty.New(),
+	}
+	logger.Error(ctx, "initialized mock accrual client")
 	return nil
 }

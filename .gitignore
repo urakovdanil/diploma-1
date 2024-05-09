@@ -24,3 +24,5 @@ vendor/
 .vscode
 /cmd/gophermart/gophermart-binary
 /progress.md
+/coverage.html
+/coverage.out
