@@ -81,8 +81,8 @@ func TestBalance_GetBalanceHandlerFunc(t *testing.T) {
 			require.NoError(t, err)
 
 			res, err := ts.Client().Do(request)
-			defer res.Body.Close()
 			require.NoError(t, err)
+			defer res.Body.Close()
 			require.Equal(t, http.StatusOK, res.StatusCode)
 			require.Contains(t, res.Header.Get("Authorization"), "Bearer ")
 
@@ -91,8 +91,8 @@ func TestBalance_GetBalanceHandlerFunc(t *testing.T) {
 			request.Header.Set("Authorization", res.Header.Get("Authorization"))
 
 			res, err = ts.Client().Do(request)
-			defer res.Body.Close()
 			require.NoError(t, err)
+			defer res.Body.Close()
 			require.Equal(t, tt.statusCode, res.StatusCode)
 		})
 	}
@@ -178,8 +178,8 @@ func TestBalance_WithdrawHandlerFunc(t *testing.T) {
 			require.NoError(t, err)
 
 			res, err := ts.Client().Do(request)
-			defer res.Body.Close()
 			require.NoError(t, err)
+			defer res.Body.Close()
 			require.Equal(t, http.StatusOK, res.StatusCode)
 			require.Contains(t, res.Header.Get("Authorization"), "Bearer ")
 
@@ -191,8 +191,8 @@ func TestBalance_WithdrawHandlerFunc(t *testing.T) {
 			request.Header.Set("Authorization", res.Header.Get("Authorization"))
 
 			res, err = ts.Client().Do(request)
-			defer res.Body.Close()
 			require.NoError(t, err)
+			defer res.Body.Close()
 			require.Equal(t, tt.statusCode, res.StatusCode)
 		})
 	}
