@@ -213,6 +213,7 @@ func TestAuth_RegisterHandlerFunc(t *testing.T) {
 				body.WriteString("{")
 			}
 			request, err := http.NewRequest(http.MethodPost, ts.URL+RegisterPath, body)
+			require.NoError(t, err)
 
 			res, err := ts.Client().Do(request)
 			require.NoError(t, err)
